@@ -131,7 +131,7 @@ class MazeGame extends FlameGame with KeyboardEvents {
 
     generateMaze();
     _initializePlayerAndGoals();
-    
+
     for (int y = 0; y < mazeHeight; y++) {
       for (int x = 0; x < mazeWidth; x++) {
         final cell = maze[y][x];
@@ -189,7 +189,7 @@ class MazeGame extends FlameGame with KeyboardEvents {
       position: Vector2(size.x / 2, size.y / 2),
       anchor: Anchor.center,
       textRenderer: TextPaint(
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 48.0,
           color: Colors.black,
           fontWeight: FontWeight.bold,
@@ -202,10 +202,6 @@ class MazeGame extends FlameGame with KeyboardEvents {
 
     _isInitialized = true;
   }
-
-
-
-
 
   @override
   KeyEventResult onKeyEvent(
@@ -236,13 +232,17 @@ class MazeGame extends FlameGame with KeyboardEvents {
     return KeyEventResult.skipRemainingHandlers;
   }
 
-
-
   void _resetGame() {
     // Timer management handled by Flutter
 
     // Remove all existing maze components (walls, player, goals, solution path)
-    removeAll(children.where((component) => component is RectangleComponent || component is Player || component is SpriteComponent || _solutionPathComponents.contains(component)).toList());
+    removeAll(children
+        .where((component) =>
+            component is RectangleComponent ||
+            component is Player ||
+            component is SpriteComponent ||
+            _solutionPathComponents.contains(component))
+        .toList());
     _solutionPathComponents.clear();
     _solutionPathComponents.clear();
 
@@ -418,7 +418,8 @@ class MazeGame extends FlameGame with KeyboardEvents {
       final List<Cell> unvisitedNeighbors = getUnvisitedNeighbors(current);
 
       if (unvisitedNeighbors.isNotEmpty) {
-        final Cell next = unvisitedNeighbors[random.nextInt(unvisitedNeighbors.length)];
+        final Cell next =
+            unvisitedNeighbors[random.nextInt(unvisitedNeighbors.length)];
         stack.add(next);
         removeWall(current, next);
         current = next;
@@ -489,31 +490,28 @@ class Cell {
   Cell(this.x, this.y);
 }
 
-class Player extends PositionComponent {
-
-  Player(Vector2 position) : super(position: position, size: Vector2.all(MazeGame.cellSize / 2)) {
-
+class Player extends SpriteComponent {
+  Player(Vector2 position)
+      : super(position: position, size: Vector2.all(MazeGame.cellSize / 2)) {
     anchor = Anchor.center;
-
   }
 
-
+  @override
+  Future<void> onLoad() async {
+    sprite = await Sprite.load('personaje.png');
+    return super.onLoad();
+  }
 
   void move(Direction direction, List<List<Cell>> maze) {
-
     final gameRef = findGame() as MazeGame;
 
     final int mazeWidth = gameRef.mazeWidth;
 
     final int mazeHeight = gameRef.mazeHeight;
 
-
-
     int currentCellX = (position.x / MazeGame.cellSize).floor();
 
     int currentCellY = (position.y / MazeGame.cellSize).floor();
-
-
 
     // Ensure currentCellX and currentCellY are within maze bounds
 
@@ -525,83 +523,56 @@ class Player extends PositionComponent {
 
     if (currentCellY >= mazeHeight) currentCellY = mazeHeight - 1;
 
-
-
     final currentCell = maze[currentCellY][currentCellX];
-
-
 
     double newX = position.x;
 
     double newY = position.y;
 
-
-
     bool canMove = false;
 
-
-
     switch (direction) {
-
       case Direction.north:
-
         if (!currentCell.walls['north']!) {
-
           newY -= MazeGame.cellSize;
 
           canMove = true;
-
         }
 
         break;
 
       case Direction.south:
-
         if (!currentCell.walls['south']!) {
-
           newY += MazeGame.cellSize;
 
           canMove = true;
-
         }
 
         break;
 
       case Direction.east:
-
         if (!currentCell.walls['east']!) {
-
           newX += MazeGame.cellSize;
 
           canMove = true;
-
         }
 
         break;
 
       case Direction.west:
-
         if (!currentCell.walls['west']!) {
-
           newX -= MazeGame.cellSize;
 
           canMove = true;
-
         }
 
         break;
-
     }
 
-
-
     if (canMove) {
-
       position.x = newX;
 
       position.y = newY;
-
-
 
       final gameRef = findGame() as MazeGame;
 
@@ -609,212 +580,82 @@ class Player extends PositionComponent {
 
       int newCellY = (position.y / MazeGame.cellSize).floor();
 
-
-
       if (newCellX == gameRef.endCell.x && newCellY == gameRef.endCell.y) {
-
         gameRef.playerReachedGoal();
-
       }
-
     }
-
   }
 
-
-
-  @override
-
-  void render(Canvas canvas) {
-
-    super.render(canvas);
-
-    canvas.drawRect(size.toRect(), Paint()..color = Colors.blue);
-
-  }
 
 }
 
-
-
 class ArrowComponent extends PositionComponent {
-
-
-
   final Direction direction;
-
-
 
   final Paint _paint;
 
-
-
-
-
-
-
-  ArrowComponent(Vector2 position, this.direction, double arrowSize, Color color)
-
-
-
+  ArrowComponent(
+      Vector2 position, this.direction, double arrowSize, Color color)
       : _paint = Paint()..color = color,
-
-
-
         super(
-
-
-
           position: position,
-
-
-
           size: Vector2.all(arrowSize),
-
-
-
           anchor: Anchor.center,
-
-
-
         );
 
-
-
-
-
-
-
   @override
-
-
-
   void render(Canvas canvas) {
-
-
-
     super.render(canvas);
-
-
-
-
-
-
 
     final Path path = Path();
 
-
-
     // Draw a triangle pointing in the correct direction
 
-
-
     switch (direction) {
-
-
-
       case Direction.north:
-
-
-
         path.moveTo(size.x / 2, 0);
 
-
-
         path.lineTo(0, size.y);
-
-
 
         path.lineTo(size.x, size.y);
 
-
-
         break;
-
-
 
       case Direction.south:
-
-
-
         path.moveTo(size.x / 2, size.y);
 
-
-
         path.lineTo(0, 0);
-
-
 
         path.lineTo(size.x, 0);
 
-
-
         break;
 
-
-
       case Direction.east:
-
-
-
         path.moveTo(size.x, size.y / 2);
 
-
-
         path.lineTo(0, 0);
-
-
 
         path.lineTo(0, size.y);
 
-
-
         break;
 
-
-
       case Direction.west:
-
-
-
         path.moveTo(0, size.y / 2);
-
-
 
         path.lineTo(size.x, 0);
 
-
-
         path.lineTo(size.x, size.y);
 
-
-
         break;
-
-
-
     }
-
-
 
     path.close();
 
-
-
     canvas.drawPath(path, _paint);
-
-
-
   }
-
-
-
 }
 
-
-
 enum Direction {
-
   north,
 
   south,
@@ -822,5 +663,4 @@ enum Direction {
   east,
 
   west,
-
 }
