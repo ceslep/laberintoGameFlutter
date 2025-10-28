@@ -87,7 +87,7 @@ class MazeGame extends FlameGame with KeyboardEvents {
           arrowDirection = Direction.north;
         }
 
-        final arrowSize = cellSize / 2;
+        const arrowSize = cellSize / 2;
         final arrowPosition = Vector2(
           currentCell.x * cellSize + cellSize / 2,
           currentCell.y * cellSize + cellSize / 2,
@@ -490,7 +490,7 @@ class Cell {
   Cell(this.x, this.y);
 }
 
-class Player extends SpriteComponent {
+class Player extends SpriteAnimationComponent {
   Player(Vector2 position)
       : super(position: position, size: Vector2.all(MazeGame.cellSize / 2)) {
     anchor = Anchor.center;
@@ -498,7 +498,11 @@ class Player extends SpriteComponent {
 
   @override
   Future<void> onLoad() async {
-    sprite = await Sprite.load('personaje.png');
+    List<Sprite> frames = [];
+    frames.add(Sprite(await (findGame() as FlameGame).images.load('frame_001.png')));
+    frames.add(Sprite(await (findGame() as FlameGame).images.load('frame_002.png')));
+    frames.add(Sprite(await (findGame() as FlameGame).images.load('frame_003.png')));
+    animation = SpriteAnimation.spriteList(frames, stepTime: 0.1);
     return super.onLoad();
   }
 
@@ -585,8 +589,6 @@ class Player extends SpriteComponent {
       }
     }
   }
-
-
 }
 
 class ArrowComponent extends PositionComponent {
