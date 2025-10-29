@@ -1,3 +1,4 @@
+import 'dart:async' as dart_async;
 import 'dart:math';
 import 'dart:collection';
 
@@ -27,6 +28,8 @@ class MazeGame extends FlameGame with KeyboardEvents {
   late Stopwatch _stopwatch;
   late TextComponent _winMessageComponent;
   Function(String elapsedTime)? onPlayerWin;
+
+  dart_async.Timer? _animationTimer;
 
   void playerReachedGoal() {
     _stopwatch.stop();
@@ -131,6 +134,8 @@ class MazeGame extends FlameGame with KeyboardEvents {
 
     generateMaze();
     _initializePlayerAndGoals();
+    await player.loaded; // Wait for player to be fully loaded
+    player.startWalkingAnimation(); // Start animation after player is initialized and loaded
 
     for (int y = 0; y < mazeHeight; y++) {
       for (int x = 0; x < mazeWidth; x++) {
@@ -203,34 +208,103 @@ class MazeGame extends FlameGame with KeyboardEvents {
     _isInitialized = true;
   }
 
-  @override
-  KeyEventResult onKeyEvent(
-    KeyEvent event,
-    Set<LogicalKeyboardKey> keysPressed,
-  ) {
-    if (!_isInitialized) {
-      return KeyEventResult.skipRemainingHandlers;
-    }
+    @override
 
-    if (event is KeyDownEvent) {
-      final LogicalKeyboardKey key = event.logicalKey;
+    KeyEventResult onKeyEvent(
 
-      if (key == LogicalKeyboardKey.arrowUp) {
-        player.move(Direction.north, maze);
-        return KeyEventResult.handled;
-      } else if (key == LogicalKeyboardKey.arrowDown) {
-        player.move(Direction.south, maze);
-        return KeyEventResult.handled;
-      } else if (key == LogicalKeyboardKey.arrowLeft) {
-        player.move(Direction.west, maze);
-        return KeyEventResult.handled;
-      } else if (key == LogicalKeyboardKey.arrowRight) {
-        player.move(Direction.east, maze);
-        return KeyEventResult.handled;
+      KeyEvent event,
+
+      Set<LogicalKeyboardKey> keysPressed,
+
+    ) {
+
+      if (!_isInitialized) {
+
+        return KeyEventResult.skipRemainingHandlers;
+
       }
+
+  
+
+      // Always start walking animation on any key press and reset the timer
+
+      player.startWalkingAnimation();
+
+      _animationTimer?.cancel();
+
+      _animationTimer = dart_async.Timer(const Duration(seconds: 2), () {
+
+        player.stopWalkingAnimation();
+
+        _animationTimer = null;
+
+      });
+
+  
+
+      final bool isMovementKey = [
+
+        LogicalKeyboardKey.arrowUp,
+
+        LogicalKeyboardKey.arrowDown,
+
+        LogicalKeyboardKey.arrowLeft,
+
+        LogicalKeyboardKey.arrowRight,
+
+      ].contains(event.logicalKey);
+
+  
+
+      if (event is KeyDownEvent) {
+
+        // Only handle movement if it's a movement key
+
+        if (isMovementKey) {
+
+          final LogicalKeyboardKey key = event.logicalKey;
+
+  
+
+          if (key == LogicalKeyboardKey.arrowUp) {
+
+            player.move(Direction.north, maze);
+
+            return KeyEventResult.handled;
+
+          } else if (key == LogicalKeyboardKey.arrowDown) {
+
+            player.move(Direction.south, maze);
+
+            return KeyEventResult.handled;
+
+          } else if (key == LogicalKeyboardKey.arrowLeft) {
+
+            player.move(Direction.west, maze);
+
+            return KeyEventResult.handled;
+
+          } else if (key == LogicalKeyboardKey.arrowRight) {
+
+            player.move(Direction.east, maze);
+
+            return KeyEventResult.handled;
+
+          }
+
+        }
+
+      }
+
+      // KeyUpEvent doesn't directly cause movement, but still resets the timer
+
+      // The timer will handle stopping the animation if no keys are pressed for 2 seconds.
+
+  
+
+      return KeyEventResult.skipRemainingHandlers;
+
     }
-    return KeyEventResult.skipRemainingHandlers;
-  }
 
   void _resetGame() {
     // Timer management handled by Flutter
@@ -491,6 +565,10 @@ class Cell {
 }
 
 class Player extends SpriteAnimationComponent {
+  late final SpriteAnimation _walkingAnimation;
+  late final SpriteAnimation _idleAnimation;
+  final _loadCompleter = dart_async.Completer<void>();
+
   Player(Vector2 position)
       : super(position: position, size: Vector2.all(MazeGame.cellSize * 1.3)) {
     anchor = Anchor.center;
@@ -505,9 +583,26 @@ class Player extends SpriteAnimationComponent {
         Sprite(await (findGame() as FlameGame).images.load('frame_002.png')));
     frames.add(
         Sprite(await (findGame() as FlameGame).images.load('frame_003.png')));
-    animation = SpriteAnimation.spriteList(frames, stepTime: 0.1);
+
+    _walkingAnimation = SpriteAnimation.spriteList(frames, stepTime: 0.1);
+    _idleAnimation = SpriteAnimation.spriteList([frames.first], stepTime: 1.0); // Single frame animation for idle
+
+    stopWalkingAnimation(); // Set initial state to idle
+    _loadCompleter.complete(); // Signal that loading is complete
     return super.onLoad();
   }
+
+  @override
+  Future<void> get loaded => _loadCompleter.future;
+
+  void startWalkingAnimation() {
+    animation = _walkingAnimation;
+  }
+
+  void stopWalkingAnimation() {
+    animation = _idleAnimation;
+  }
+
 
   void move(Direction direction, List<List<Cell>> maze) {
     final gameRef = findGame() as MazeGame;
