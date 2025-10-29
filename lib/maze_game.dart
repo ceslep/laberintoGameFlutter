@@ -7,6 +7,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flame/events.dart';
+import 'package:flame_audio/flame_audio.dart';
 
 enum GameState {
   ready,
@@ -37,6 +38,9 @@ class MazeGame extends FlameGame with KeyboardEvents {
   }
 
   void playerReachedGoal() {
+    dart_async.Timer(const Duration(milliseconds: 500), () {
+      FlameAudio.bgm.stop(); // Stop background music
+    });
     _stopwatch.stop();
     final String elapsedTime = _formatDuration(_stopwatch.elapsed);
     _winMessageComponent.text = '¡Ganaste! Tiempo: $elapsedTime';
@@ -56,6 +60,7 @@ class MazeGame extends FlameGame with KeyboardEvents {
 
   // Exposed methods for Flutter widget
   void startGame() {
+    FlameAudio.loop('game-music-loop.mp3'); // Start background music
     _stopwatch.start();
     _winMessageComponent.removeFromParent();
     gameState.value = GameState.playing; // Update game state
@@ -63,6 +68,7 @@ class MazeGame extends FlameGame with KeyboardEvents {
 
   void endGame() {
     // Game state and timer managed by Flutter
+    FlameAudio.bgm.stop(); // Stop background music
     gameState.value = GameState.finished; // Update game state
   }
 
@@ -140,6 +146,7 @@ class MazeGame extends FlameGame with KeyboardEvents {
     _initializePlayerAndGoals();
     await player.loaded; // Wait for player to be fully loaded
     player.startWalkingAnimation(); // Start animation after player is initialized and loaded
+    await FlameAudio.audioCache.load('game-music-loop.mp3'); // Preload audio
 
     for (int y = 0; y < mazeHeight; y++) {
       for (int x = 0; x < mazeWidth; x++) {
