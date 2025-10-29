@@ -31,7 +31,7 @@ class MazeGame extends FlameGame with KeyboardEvents {
   void playerReachedGoal() {
     _stopwatch.stop();
     final String elapsedTime = _formatDuration(_stopwatch.elapsed);
-    _winMessageComponent.text = 'You Win! Time: $elapsedTime';
+    _winMessageComponent.text = '¡Ganaste! Tiempo: $elapsedTime';
     add(_winMessageComponent);
 
     if (onPlayerWin != null) {
@@ -110,7 +110,7 @@ class MazeGame extends FlameGame with KeyboardEvents {
   }
 
   @override
-  Color backgroundColor() => const Color(0xFFCCCCCC);
+  Color backgroundColor() => const Color(0xFFFFFFFF);
 
   @override
   Future<void> onLoad() async {

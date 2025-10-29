@@ -34,7 +34,7 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('Maze Game'),
+          title: const Text('Juego del Laberinto'),
           actions: [
             if (_gameState == GameState.ready || _gameState == GameState.finished)
               ElevatedButton(
@@ -45,7 +45,7 @@ class _MyAppState extends State<MyApp> {
                     _gameState = GameState.playing;
                   });
                 },
-                child: const Text('Start Game'),
+                child: const Text('Iniciar Juego'),
               ),
             if (_gameState == GameState.ready || _gameState == GameState.finished)
               ElevatedButton(
@@ -54,7 +54,7 @@ class _MyAppState extends State<MyApp> {
                     _game.drawSolution();
                   });
                 },
-                child: const Text('Solve'),
+                child: const Text('Resolver'),
               ),
             if (_gameState == GameState.playing)
               ElevatedButton(
@@ -64,7 +64,7 @@ class _MyAppState extends State<MyApp> {
                     _gameState = GameState.finished;
                   });
                 },
-                child: const Text('End Game'),
+                child: const Text('Terminar Juego'),
               ),
           ],
         ),
