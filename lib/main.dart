@@ -16,7 +16,6 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   late MazeGame _game;
-  GameState _gameState = GameState.ready;
 
   @override
   void initState() {
@@ -24,45 +23,51 @@ class _MyAppState extends State<MyApp> {
     _game = MazeGame();
     _game.onPlayerWin = (elapsedTime) {
       setState(() {
-        _gameState = GameState.finished;
+        // No need to update _gameState here, MazeGame handles its own state
       });
     };
+    _game.gameState.addListener(_onGameStateChanged);
+  }
+
+  @override
+  void dispose() {
+    _game.gameState.removeListener(_onGameStateChanged);
+    super.dispose();
+  }
+
+  void _onGameStateChanged() {
+    setState(() {
+      // Rebuild UI when game state changes
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('Juego del Laberinto'),
+          title: const Text('Instituto Guatica'),
           actions: [
-            if (_gameState == GameState.ready || _gameState == GameState.finished)
+            if (_game.gameState.value == GameState.ready || _game.gameState.value == GameState.finished)
               ElevatedButton(
                 onPressed: () {
-                  setState(() {
-                    _game.resetGame();
-                    _game.startGame();
-                    _gameState = GameState.playing;
-                  });
+                  _game.resetGame();
+                  _game.startGame();
                 },
                 child: const Text('Iniciar Juego'),
               ),
-            if (_gameState == GameState.ready || _gameState == GameState.finished)
+            if (_game.gameState.value == GameState.ready || _game.gameState.value == GameState.finished)
               ElevatedButton(
                 onPressed: () {
-                  setState(() {
-                    _game.drawSolution();
-                  });
+                  _game.drawSolution();
                 },
                 child: const Text('Resolver'),
               ),
-            if (_gameState == GameState.playing)
+            if (_game.gameState.value == GameState.playing)
               ElevatedButton(
                 onPressed: () {
-                  setState(() {
-                    _game.endGame();
-                    _gameState = GameState.finished;
-                  });
+                  _game.endGame();
                 },
                 child: const Text('Terminar Juego'),
               ),

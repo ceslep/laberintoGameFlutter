@@ -15,7 +15,7 @@ enum GameState {
 }
 
 class MazeGame extends FlameGame with KeyboardEvents {
-  static const int cellSize = 48;
+  static const double cellSize = 48 * 1.3;
   late int mazeWidth;
   late int mazeHeight;
 
@@ -29,7 +29,12 @@ class MazeGame extends FlameGame with KeyboardEvents {
   late TextComponent _winMessageComponent;
   Function(String elapsedTime)? onPlayerWin;
 
+  final gameState = ValueNotifier<GameState>(GameState.ready);
   dart_async.Timer? _animationTimer;
+
+  MazeGame() {
+    // No-op constructor, initialization moved to onLoad
+  }
 
   void playerReachedGoal() {
     _stopwatch.stop();
@@ -53,10 +58,12 @@ class MazeGame extends FlameGame with KeyboardEvents {
   void startGame() {
     _stopwatch.start();
     _winMessageComponent.removeFromParent();
+    gameState.value = GameState.playing; // Update game state
   }
 
   void endGame() {
     // Game state and timer managed by Flutter
+    gameState.value = GameState.finished; // Update game state
   }
 
   void resetGame() {
@@ -64,6 +71,7 @@ class MazeGame extends FlameGame with KeyboardEvents {
     _stopwatch.reset();
     _winMessageComponent.removeFromParent();
     _resetGame();
+    gameState.value = GameState.ready; // Update game state
   }
 
   void drawSolution() {
@@ -106,10 +114,6 @@ class MazeGame extends FlameGame with KeyboardEvents {
         _solutionPathComponents.add(arrow);
       }
     }
-  }
-
-  MazeGame() {
-    // No-op constructor, initialization moved to onLoad
   }
 
   @override
@@ -218,11 +222,11 @@ class MazeGame extends FlameGame with KeyboardEvents {
 
     ) {
 
-      if (!_isInitialized) {
+          if (!_isInitialized || gameState.value != GameState.playing) {
 
-        return KeyEventResult.skipRemainingHandlers;
+            return KeyEventResult.skipRemainingHandlers;
 
-      }
+          }
 
   
 
