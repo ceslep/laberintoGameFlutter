@@ -492,16 +492,19 @@ class Cell {
 
 class Player extends SpriteAnimationComponent {
   Player(Vector2 position)
-      : super(position: position, size: Vector2.all(MazeGame.cellSize / 2)) {
+      : super(position: position, size: Vector2.all(MazeGame.cellSize * 1.3)) {
     anchor = Anchor.center;
   }
 
   @override
   Future<void> onLoad() async {
     List<Sprite> frames = [];
-    frames.add(Sprite(await (findGame() as FlameGame).images.load('frame_001.png')));
-    frames.add(Sprite(await (findGame() as FlameGame).images.load('frame_002.png')));
-    frames.add(Sprite(await (findGame() as FlameGame).images.load('frame_003.png')));
+    frames.add(
+        Sprite(await (findGame() as FlameGame).images.load('frame_001.png')));
+    frames.add(
+        Sprite(await (findGame() as FlameGame).images.load('frame_002.png')));
+    frames.add(
+        Sprite(await (findGame() as FlameGame).images.load('frame_003.png')));
     animation = SpriteAnimation.spriteList(frames, stepTime: 0.1);
     return super.onLoad();
   }
